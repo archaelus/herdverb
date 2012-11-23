@@ -1,1 +1,1 @@
-web: erl -pa ebin -env ERL_LIBS deps -s herdverb_app -noshell -noinput -herdverb http_listen_port $PORT
+web: erl -pa ebin -env ERL_LIBS deps -s herdverb_app -noshell -noinput -boot start_sasl -herdverb http_listen_port $PORT
