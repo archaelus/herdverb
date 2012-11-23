@@ -8,15 +8,20 @@
 -behaviour(cowboy_http_handler).
 -export([init/3, handle/2, terminate/2]).
 
+-include("herdverb_log.hrl").
+
 init({_Any, http}, Req, []) ->
     {ok, Req, undefined}.
 
 handle(Req, State) ->
-    {ok, Req2} = cowboy_http_req:reply(200,
+    {Method, Req2} = cowboy_http_req:method(Req),
+    ?INFO("at=request method='~s'", [Method]),
+    Body = io_lib:format("at=request method='~s'", [Method]),
+    {ok, Req3} = cowboy_http_req:reply(200,
                                        [{'Content-Type', "text/plain"}],
-                                       <<"Hello world!">>,
-                                       Req),
-    {ok, Req2, State}.
+                                       Body,
+                                       Req2),
+    {ok, Req3, State}.
 
 terminate(_Req, _State) ->
     ok.
