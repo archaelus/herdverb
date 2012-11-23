@@ -1,0 +1,1 @@
+web: erl -pa ebin -env ERL_LIBS deps -s herdverb_app -noshell -noinput -herdverb http_listen_port $PORT
