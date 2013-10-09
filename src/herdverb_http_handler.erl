@@ -16,7 +16,7 @@ init({_Any, http}, Req, []) ->
 handle(Req, State) ->
     {Method, Req2} = cowboy_req:method(Req),
     ?INFO("at=request method='~s'", [Method]),
-    Body = io_lib:format("at=request method='~s'", [Method]),
+    Body = format(Req),
     {ok, Req3} = cowboy_req:reply(200,
                                   [{<<"Content-Type">>, <<"text/plain">>}],
                                   Body,
@@ -25,3 +25,20 @@ handle(Req, State) ->
 
 terminate(_Req, _State) ->
     ok.
+
+format(Req) ->
+    {Fmt, Args} = serialize(Req),
+    io_lib:format(Fmt, Args).
+
+serialize(Req) ->
+    {lists:flatten(["~s ~s ~s~n",
+                    ["~s: ~s~n"
+                     || _ <- cowboy_req:headers(Req)],
+                    "~nBODY~n"]),
+     [
+      cowboy_req:method(Req)
+     ,cowboy_req:path(Req)
+     ,cowboy_req:version(Req)
+      | lists:flatmap(fun ({K, V}) -> [K, V] end,
+                      cowboy_req:headers(Req))
+     ]}.
