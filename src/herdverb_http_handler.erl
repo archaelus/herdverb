@@ -6,7 +6,7 @@
 -module(herdverb_http_handler).
 
 -behaviour(cowboy_http_handler).
--export([init/3, handle/2, terminate/2]).
+-export([init/3, handle/2, terminate/3]).
 
 -include("herdverb_log.hrl").
 
@@ -16,29 +16,32 @@ init({_Any, http}, Req, []) ->
 handle(Req, State) ->
     {Method, Req2} = cowboy_req:method(Req),
     ?INFO("at=request method='~s'", [Method]),
-    Body = format(Req),
-    {ok, Req3} = cowboy_req:reply(200,
+    {Body, Req3} = format(Req2),
+    {ok, Req4} = cowboy_req:reply(200,
                                   [{<<"Content-Type">>, <<"text/plain">>}],
                                   Body,
-                                  Req2),
-    {ok, Req3, State}.
+                                  Req3),
+    {ok, Req4, State}.
 
-terminate(_Req, _State) ->
+terminate(_Req, _Reason, _State) ->
     ok.
 
 format(Req) ->
-    {Fmt, Args} = serialize(Req),
-    io_lib:format(Fmt, Args).
+    {{Fmt, Args}, Req2} = serialize(Req),
+    {io_lib:format(Fmt, Args), Req2}.
 
 serialize(Req) ->
-    {lists:flatten(["~s ~s ~s~n",
-                    ["~s: ~s~n"
-                     || _ <- cowboy_req:headers(Req)],
-                    "~nBODY~n"]),
-     [
-      cowboy_req:method(Req)
-     ,cowboy_req:path(Req)
-     ,cowboy_req:version(Req)
-      | lists:flatmap(fun ({K, V}) -> [K, V] end,
-                      cowboy_req:headers(Req))
-     ]}.
+    {[Method, Path, {V1, V2}, Headers], Req2} =
+        lists:foldl(fun (F, {Acc, ReqM}) ->
+                            {V, ReqM1} = cowboy_req:F(ReqM),
+                            {[V | Acc], ReqM1}
+                    end,
+                    {[], Req},
+                    lists:reverse([method, path, version, headers])),
+    {{lists:flatten(["~s ~s HTTP/~p.~p~n",
+                     ["~s: ~s~n"
+                      || _ <- Headers ],
+                     "~n"]),
+      [Method, Path, V1, V2 |
+       lists:append([[K, V] || {K, V} <- Headers])]},
+     Req2}.
