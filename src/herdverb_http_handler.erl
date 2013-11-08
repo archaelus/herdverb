@@ -31,7 +31,7 @@ format(Req) ->
     {io_lib:format(Fmt, Args), Req2}.
 
 serialize(Req) ->
-    {[Method, Path, {V1, V2}, Headers], Req2} =
+    {[Method, Path, Version, Headers], Req2} =
         lists:foldr(fun (F, {Acc, ReqM}) ->
                             {V, ReqM1} = cowboy_req:F(ReqM),
                             {[V | Acc], ReqM1}
@@ -39,10 +39,10 @@ serialize(Req) ->
                     {[], Req},
                     [method, path, version, headers]),
     {ok, Body, Req3} = cowboy_req:body(Req2),
-    {{lists:flatten(["~s ~s HTTP/~p.~p~n",
+    {{lists:flatten(["~s ~s ~s~n",
                      ["~s: ~s~n"
                       || _ <- Headers ],
                      "~n~s"]),
-      [Method, Path, V1, V2 |
+      [Method, Path, atom_to_list(Version) |
        lists:append([[K, V] || {K, V} <- Headers]) ++ [Body]]},
      Req3}.
