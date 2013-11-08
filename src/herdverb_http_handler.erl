@@ -32,16 +32,17 @@ format(Req) ->
 
 serialize(Req) ->
     {[Method, Path, {V1, V2}, Headers], Req2} =
-        lists:foldl(fun (F, {Acc, ReqM}) ->
+        lists:foldr(fun (F, {Acc, ReqM}) ->
                             {V, ReqM1} = cowboy_req:F(ReqM),
                             {[V | Acc], ReqM1}
                     end,
                     {[], Req},
-                    lists:reverse([method, path, version, headers])),
+                    [method, path, version, headers]),
+    {ok, Body, Req3} = cowboy_req:body(Req2),
     {{lists:flatten(["~s ~s HTTP/~p.~p~n",
                      ["~s: ~s~n"
                       || _ <- Headers ],
-                     "~n"]),
+                     "~n~s"]),
       [Method, Path, V1, V2 |
-       lists:append([[K, V] || {K, V} <- Headers])]},
-     Req2}.
+       lists:append([[K, V] || {K, V} <- Headers]) ++ [Body]]},
+     Req3}.
