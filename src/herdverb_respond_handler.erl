@@ -23,7 +23,7 @@ handle(Req, State) ->
     {ok, Req4} = cowboy_req:reply(200,
                                   ResponseHeaders,
                                   ReqIOList,
-                                  Req2),
+                                  Req3),
     {ok, Req4, State}.
 
 terminate(_Req, _Reason, _State) ->
