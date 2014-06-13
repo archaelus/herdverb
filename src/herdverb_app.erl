@@ -46,6 +46,7 @@ stop(_State) ->
 start_phase(listen, _Type, _Args) ->
     Dispatch = [{'_',
                  [{"/respond", herdverb_respond_handler, []}
+                 ,{"/time/:time", herdverb_time_handler, []}
                  ,{'_', herdverb_http_handler, []}]}
                ],
     cowboy:start_http(?APP,100,
