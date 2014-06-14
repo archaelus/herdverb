@@ -18,8 +18,7 @@ init({_Any, http}, Req, []) ->
 
 handle(Req, State) ->
     {ReqIOList, Req2} = to_iolist(Req),
-    {RespTimeBin, Req3} = cowboy_req:binding(time, Req2, 1000),
-    RespTimeMS = list_to_integer(binary_to_list(iolist_to_binary(RespTimeBin))),
+    {RespTimeMS, Req3} = cowboy_req:binding(time, Req2, 1000),
     TimePerChar = erlang:max(RespTimeMS div iolist_size(ReqIOList), 1),
     ?INFO("Responding at ~p ms/byte: ~s", [TimePerChar, ReqIOList]),
     {ok, Req4} =
