@@ -31,9 +31,11 @@ terminate(_Req, _Reason, _State) ->
 to_iolist(Req) ->
     {Status, Req2} = status_to_iolist(Req),
     {Headers, Req3} = headers_to_iolist(Req2),
+    {Body, Req4} = body_to_iolist(Req3),
     {[Status, ?CRLF,
       Headers,
-      ?CRLF],
+      ?CRLF,
+      Body],
      Req3}.
 
 status_to_iolist(Req) ->
@@ -48,3 +50,11 @@ headers_to_iolist(Req) ->
     {[ [K, <<": ">>, V, ?CRLF]
        || {K, V} <- Headers ],
      Req2}.
+
+body_to_iolist(Req) ->
+    case cowboy_req:body(Req) of
+        {error, Why} ->
+            {io_lib:format("Couldn't read body: ~p", [Why]), Req};
+        {ok, Binary, Req1} ->
+            {Binary, Req1}
+    end.
