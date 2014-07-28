@@ -36,7 +36,7 @@ to_iolist(Req) ->
       Headers,
       ?CRLF,
       Body],
-     Req3}.
+     Req4}.
 
 status_to_iolist(Req) ->
     {Method, Req2} = cowboy_req:method(Req),
